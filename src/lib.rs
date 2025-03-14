@@ -41,68 +41,11 @@ impl Config
         mut args: impl Iterator<Item = String>
     ) -> Result<Config, &'static str> {
         args.next();
-        let path = match args.next() {
-            Some(arg) => arg,
-            None => {
-                println!("Input error");
-                crate::Action::list_commands();
-                return Err("Input error");
-            }
-        };
+        // v2        
+        let path = args.next().ok_or("Failed to get path")?;
+
         let path = path::PathBuf::from(path).canonicalize().unwrap();
         return Ok(Config{path})
-    }
-}
-pub enum Action
-{
-    Quit, 
-    List,
-    Help,
-    Buy,
-    Sell,
-    Delete
-}
-
-impl Action
-{
-    pub fn from_string(string: &str) -> Result<Action, Box<dyn Error>>
-    {
-        // todo create static map instead
-        if string == "Q" || string == "Quit"
-        {
-            return Ok(Action::Quit);
-        }
-        else if string == "L" || string == "List"
-        {
-            return Ok(Action::List);
-        }
-        else if string == "H" || string == "Help"
-        {
-            return Ok(Action::Help);
-        }
-        else if string == "B" || string == "Buy"
-        {
-            return Ok(Action::Buy);
-        }
-        else if string == "S" || string == "Sell"
-        {
-            return Ok(Action::Sell);
-        }
-        else if string == "D" || string == "Delete"
-        {
-            return Ok(Action::Delete);
-        }
-        return Err("Cannot convert {string} to Action")?;
-    }
-
-    pub fn list_commands()
-    {
-        println!();
-        println!("Commands(shortcut):");
-        println!("Quit(Q) - Quit");
-        println!("Help(H) - Lists this help text");
-        println!("List(L) - Lists all active orders in the orderbook");
-        println!("Buy(B) - Place buy order");
     }
 }
 
@@ -153,9 +96,4 @@ pub fn delete(config: &Config) -> Result<(), Box<dyn Error>>
 mod tests {
     use super::*;
 
-    #[test]
-    fn parse_action() {
-        let action: Action = Action::from_string("Q").unwrap();
-        assert!(matches!(action, Action::Quit));
-    }
 }

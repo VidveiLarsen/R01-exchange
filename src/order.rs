@@ -54,12 +54,8 @@ impl Order
         format!("{},{},{},{}", self.id, BuySell::to_str(&self.buy_sell), self.quantity, self.price)
     }
 
-    fn deserialize(buf: &str) -> Result<Order, &'static str> {
-        let values: Vec<&str> = buf.split(',').collect();
-        if values.len() != 4 {
-            return Err("Failed to deserialize order from {buf}");
-        }
-        let mut itr = values.iter();
+    fn deserialize(buf: &str) -> Result<Order, Box<dyn Error>> {
+        let mut itr = buf.split(',');
         
         let id = itr.next().unwrap().parse::<u32>().expect("Failed to parse orderId from {buf}");
         let buy_sell = BuySell::from_str(itr.next().unwrap()).expect("Failed to parse buySell from {buf}");
@@ -146,8 +142,6 @@ impl OrderBook
 
 #[cfg(test)]
 mod tests {
-    use crate::order;
-
     use super::*;
 
     #[test]
