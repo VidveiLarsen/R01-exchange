@@ -122,6 +122,7 @@ impl OrderBook
                 .collect()})
     }
 
+    /// Create a new order, but does not serialise it to disk. 
     pub fn create_order(&mut self, buy_sell: BuySell, quantity: u16, price: f32) -> u32 {
         
         let new_order_id: u32 = 

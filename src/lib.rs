@@ -28,10 +28,11 @@ use order::BuySell;
 
 pub mod order;
 
-
+/// Contains the parsed command line arguments of the main executable
 #[derive(Debug)]
 pub struct Config
 {
+    /// Path of the saved orders file. Should be in csv format
     pub path: path::PathBuf
 }
 
@@ -49,6 +50,7 @@ impl Config
     }
 }
 
+/// Lists all orders stored on disk
 pub fn list(config: &Config) -> Result<(), Box<dyn Error>>
 {
     let orderbook = order::OrderBook::load(&config.path)?;
@@ -69,6 +71,8 @@ where
     Ok(value)
 }
 
+/// Creates a new order. Will ask for several inputs, and will then store the 
+/// new order to disk
 pub fn new_order(config: &Config, buy_sell: BuySell) -> Result<(), Box<dyn Error>>
 {
     let mut orderbook = order::OrderBook::load(&config.path)?;
@@ -81,6 +85,7 @@ pub fn new_order(config: &Config, buy_sell: BuySell) -> Result<(), Box<dyn Error
     Ok(())
 }
 
+/// Delete order command, which asks for a order_id to delete
 pub fn delete(config: &Config) -> Result<(), Box<dyn Error>>
 {
     let mut orderbook = order::OrderBook::load(&config.path)?;
