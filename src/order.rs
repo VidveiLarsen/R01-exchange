@@ -51,16 +51,7 @@ impl Order
 {
     fn serialize(&self) -> String
     {
-        // todo, charnge to format string for 
-        let mut buf = String::new();
-        buf += self.id.to_string().as_str();
-        buf += ",";
-        buf += BuySell::to_str(&self.buy_sell);
-        buf += ",";
-        buf += self.quantity.to_string().as_str();
-        buf += ",";
-        buf += self.price.to_string().as_str();
-        buf
+        format!("{},{},{},{}", self.id, BuySell::to_str(&self.buy_sell), self.quantity, self.price)
     }
 
     fn deserialize(buf: &str) -> Result<Order, &'static str> {
