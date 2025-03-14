@@ -139,7 +139,7 @@ impl OrderBook
     }
 
     pub fn delete_order(&mut self, order_id: u32) -> Result<(), Box<dyn Error>> {
-        self.orders.retain(|order| order.id == order_id);
+        self.orders.retain(|order| order.id != order_id);
         Ok(())
     }
 }
@@ -153,9 +153,11 @@ mod tests {
     #[test]
     fn serialize_order() {
         let order = Order{id: 1,buy_sell: BuySell::Buy,quantity: 10, price: 3.2};
+        println!("Order: {order:?}");
         let buff: String = order.serialize();
+        println!("Serialized order: {buff}");
         let order_2 = Order::deserialize(&buff).expect("Failed to deserialize order");
-        
+        println!("Deserialized order {order_2:?}");
         assert_eq!(order, order_2);
     }
 
@@ -175,5 +177,18 @@ mod tests {
         let buffer: String = orderbook1.serialize();
         let orderbook2 = OrderBook::deserialize(&buffer).expect("Unable to deserialize orderbook");
         assert_eq!(orderbook1.orders, orderbook2.orders); 
+    }
+
+    #[test]
+    fn orderbook_delete() {
+        let mut orderbook1 = OrderBook::new();
+        
+        let order_id1 = orderbook1.create_order(BuySell::Buy, 10, 3.2);
+        let order_id2 = orderbook1.create_order(BuySell::Sell, 12, 3.6);
+        orderbook1.delete_order(order_id1).expect(format!("Failed to delete newly created order 1 {}", order_id1).as_str());
+        assert_eq!(orderbook1.orders.len(), 1); 
+
+        orderbook1.delete_order(order_id2).expect(format!("Failed to delete newly created order 2{}", order_id2).as_str());
+        assert!(orderbook1.orders.is_empty(), "Expected empty orderbook after deleting all orders"); 
     }
 }
