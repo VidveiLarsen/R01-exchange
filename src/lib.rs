@@ -37,9 +37,20 @@ pub struct Config
 
 impl Config 
 {
-    pub fn build(args: &[String]) -> Result<Config, &'static str>
-    {
-        return Ok(Config{path: path::PathBuf::from(&args[1]).canonicalize().unwrap()})
+    pub fn build(
+        mut args: impl Iterator<Item = String>
+    ) -> Result<Config, &'static str> {
+        args.next();
+        let path = match args.next() {
+            Some(arg) => arg,
+            None => {
+                println!("Input error");
+                crate::Action::list_commands();
+                return Err("Input error");
+            }
+        };
+        let path = path::PathBuf::from(path).canonicalize().unwrap();
+        return Ok(Config{path})
     }
 }
 pub enum Action
@@ -99,9 +110,7 @@ pub fn list(config: &Config) -> Result<(), Box<dyn Error>>
 {
     let orderbook = order::OrderBook::load(&config.path)?;
     println!("Orders:");
-    for order in orderbook.orders() {
-        println!("{order:?}");
-    }
+    orderbook.orders().iter().for_each(|order| println!("{order:?}") );
     Ok(())
 }
 

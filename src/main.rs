@@ -4,8 +4,7 @@ use std::env;
 use exchange::{self, Config, Action, order::BuySell};
 
 fn main() -> Result<(), Box<dyn Error>> {
-    let args: Vec<String> = env::args().collect();
-    let config: Config = Config::build(&args).expect("Failed to get config");
+    let config: Config = Config::build(env::args()).expect("Failed to get config");
     println!("Config: {config:?}");
 
 

@@ -68,10 +68,12 @@ impl Order
         if values.len() != 4 {
             return Err("Failed to deserialize order from {buf}");
         }
-        let id = values.get(0).unwrap().parse::<u32>().expect("Failed to parse orderId from {buf}");
-        let buy_sell = BuySell::from_str(values.get(1).unwrap()).expect("Failed to parse buySell from {buf}");
-        let quantity = values.get(2).unwrap().parse::<u16>().expect("Failed to parse quantity from {buf}");
-        let price = values.get(3).unwrap().parse::<f32>().expect("Failed to parse price from {buf}");
+        let mut itr = values.iter();
+        
+        let id = itr.next().unwrap().parse::<u32>().expect("Failed to parse orderId from {buf}");
+        let buy_sell = BuySell::from_str(itr.next().unwrap()).expect("Failed to parse buySell from {buf}");
+        let quantity = itr.next().unwrap().parse::<u16>().expect("Failed to parse quantity from {buf}");
+        let price = itr.next().unwrap().parse::<f32>().expect("Failed to parse price from {buf}");
         
         let order = Order{id, buy_sell, quantity, price};
         Ok(order)
@@ -114,47 +116,39 @@ impl OrderBook
     pub fn orders(&self) -> &Vec<Order> {
         return &self.orders;
     }
+
     fn serialize(&self) -> String
     {
-        let mut buf = String::new();
-        for (index, order) in self.orders.iter().enumerate()
-        {
-            buf += order.serialize().as_str();
-            if index != self.orders.len() - 1 {
-                buf += "\n";
-            }
-        }
-        buf
+        self.orders
+            .iter()
+            .fold(String::new(), |buffer, order|  buffer + order.serialize().as_str() + "\n")
+            .trim_end()
+            .to_string()
     }
 
     fn deserialize(buf: &str) -> Result<OrderBook, &'static str>
     {
-        let mut orderbook = OrderBook{..Default::default()};
-        for line in buf.split("\n") {
-            if line.len() > 0 { 
-                orderbook.orders.push(Order::deserialize(&line)?);
-            }
-        }
-        Ok(orderbook)
+        Ok(OrderBook{ orders: 
+            buf.split("\n")
+                .filter(|line| line.len() > 0)
+                .map(|line| Order::deserialize(&line).expect("Failed to deserialize order"))
+                .collect()})
     }
 
-    pub fn create_order(&mut self, buy_sell: BuySell, quantity: u16, price: f32) -> u32{
-        // just use orderId as max id + 1
-        let mut max_order_id: u32 = 0;
-        for order in &self.orders {
-            if order.id > max_order_id {
-                max_order_id = order.id;
-            }
-        }
-        let new_order_id: u32 = max_order_id + 1;
+    pub fn create_order(&mut self, buy_sell: BuySell, quantity: u16, price: f32) -> u32 {
+        
+        let new_order_id: u32 = 
+            self.orders.iter()
+            .max_by_key(|order| order.id)
+            .map_or(1, |order| order.id + 1);
+        
         let new_order = Order{buy_sell, id: new_order_id, quantity, price};
         self.orders.push(new_order);
         new_order_id
     }
 
     pub fn delete_order(&mut self, order_id: u32) -> Result<(), Box<dyn Error>> {
-        let index = self.orders.iter().position(|order: &Order| order.id == order_id).unwrap();
-        self.orders.remove(index);
+        self.orders.retain(|order| order.id == order_id);
         Ok(())
     }
 }
